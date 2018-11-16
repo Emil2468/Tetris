@@ -90,4 +90,22 @@ public class Board {
             activePiece.Move(-dir, 0); //Move back if it now collides
         }
     }
+
+    //Clockwise = -1, Counter clockwise = 1
+    public void RotatePiece(int dir) {
+        activePiece.Rotate(dir);
+        for(int i = 0; i < activePiece.GetBricks().size(); i++) {
+            if(activePiece.GetBricks().get(i).pos.x < 0) {
+                activePiece.Rotate(-dir);
+                return;
+            } 
+            if(activePiece.GetBricks().get(i).pos.x >= cols.length) {
+                activePiece.Rotate(-dir);
+                return;
+            }
+        }
+        if(collision()) {
+            activePiece.Rotate(-dir);
+        }
+    }
 }

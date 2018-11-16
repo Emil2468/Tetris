@@ -19,6 +19,10 @@ void keyPressed() {
         board.MovePiece(-1);
     } else if(keyCode == RIGHT) {
         board.MovePiece(1);
+    } else if(keyCode == UP) {
+        board.RotatePiece(1);
+    } else if(keyCode == DOWN) {
+        board.RotatePiece(-1);
     }
 }
 

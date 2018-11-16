@@ -35,6 +35,10 @@ public void keyPressed() {
         board.MovePiece(-1);
     } else if(keyCode == RIGHT) {
         board.MovePiece(1);
+    } else if(keyCode == UP) {
+        board.RotatePiece(1);
+    } else if(keyCode == DOWN) {
+        board.RotatePiece(-1);
     }
 }
 
@@ -129,6 +133,24 @@ public class Board {
         activePiece.Move(dir, 0);
         if(collision()) {
             activePiece.Move(-dir, 0); //Move back if it now collides
+        }
+    }
+
+    //Clockwise = -1, Counter clockwise = 1
+    public void RotatePiece(int dir) {
+        activePiece.Rotate(dir);
+        for(int i = 0; i < activePiece.GetBricks().size(); i++) {
+            if(activePiece.GetBricks().get(i).pos.x < 0) {
+                activePiece.Rotate(-dir);
+                return;
+            } 
+            if(activePiece.GetBricks().get(i).pos.x >= cols.length) {
+                activePiece.Rotate(-dir);
+                return;
+            }
+        }
+        if(collision()) {
+            activePiece.Rotate(-dir);
         }
     }
 }
@@ -226,15 +248,28 @@ public class LPiece implements IPiece {
 public class LongPiece implements IPiece {
 
     private ArrayList<Brick> bricks = new ArrayList<Brick>();
-
+    boolean upright = true;
     public LongPiece (int sideLen) {
         bricks.add(new Brick(sideLen, color(255,255,0), new PVector(0,0)));
         bricks.add(new Brick(sideLen, color(255,255,0), new PVector(0,1)));
         bricks.add(new Brick(sideLen, color(255,255,0), new PVector(0,2)));
         bricks.add(new Brick(sideLen, color(255,255,0), new PVector(0,3)));
     }
+
     public void Rotate(int dir) {
-        //Box is the same no matter rotation
+        if(upright) {
+            bricks.get(0).Move(1, 0);
+            bricks.get(1).Move(0, -1);
+            bricks.get(2).Move(-1, -2);
+            bricks.get(3).Move(-2, -3);
+            upright = false;
+        } else {
+            bricks.get(0).Move(-1, 0);
+            bricks.get(1).Move(0, 1);
+            bricks.get(2).Move(1, 2);
+            bricks.get(3).Move(2, 3);
+            upright = true;
+        }
     }
 
     public void Move(float deltaX, float deltaY) {
@@ -257,7 +292,7 @@ public class LongPiece implements IPiece {
 public class RevLPiece implements IPiece {
 
     private ArrayList<Brick> bricks = new ArrayList<Brick>();
-
+    private int rotation = 0;
     public RevLPiece (int sideLen) {
         bricks.add(new Brick(sideLen, color(255,0,0), new PVector(1,0)));
         bricks.add(new Brick(sideLen, color(255,0,0), new PVector(1,1)));
@@ -265,7 +300,52 @@ public class RevLPiece implements IPiece {
         bricks.add(new Brick(sideLen, color(255,0,0), new PVector(0,2)));
     }
     public void Rotate(int dir) {
-        //Box is the same no matter rotation
+        if(dir == -1 && rotation == 0) {
+            bricks.get(0).Move(1,1);
+            //brick 1 stays
+            bricks.get(2).Move(-1,-1);
+            bricks.get(3).Move(0,-2);
+            rotation = 1;
+        } else if(dir == -1 && rotation == 1) {
+            bricks.get(0).Move(-2,1);
+            bricks.get(1).Move(-1,0);
+            bricks.get(2).Move(0,-1);
+            bricks.get(3).Move(1,0);
+            rotation = 2;
+        } else if(dir == -1 && rotation == 2) {
+            bricks.get(0).Move(-1,-1);
+            bricks.get(2).Move(1,1);
+            bricks.get(3).Move(0,2);
+            rotation = 3;
+        } else if(dir == -1 && rotation == 3) {
+            bricks.get(0).Move(1,-1);
+            bricks.get(2).Move(-1,1);
+            bricks.get(3).Move(-2,0);
+            rotation = 0;
+        } 
+        else if(dir == 1 && rotation == 0) {
+            bricks.get(0).Move(-1,1);
+            bricks.get(2).Move(1,-1);
+            bricks.get(3).Move(2,0);
+            rotation = 3;
+        } else if(dir == 1 && rotation == 1) {
+            bricks.get(0).Move(-1,-1);
+            //brick 1 stays
+            bricks.get(2).Move(1,1);
+            bricks.get(3).Move(0,2);
+            rotation = 0;
+        } else if(dir == 1 && rotation == 2) {
+            bricks.get(0).Move(2,-1);
+            bricks.get(1).Move(1,0);
+            bricks.get(2).Move(0,1);
+            bricks.get(3).Move(-1,0);
+            rotation = 1;
+        } else if(dir == 1 && rotation == 3) {
+            bricks.get(0).Move(1,1);
+            bricks.get(2).Move(-1,-1);
+            bricks.get(3).Move(0,-2);
+            rotation = 2;
+        } 
     }
 
     public void Move(float deltaX, float deltaY) {
