@@ -1,13 +1,14 @@
-public class RevLPiece implements IPiece {
+public class SPiece implements IPiece {
 
     private ArrayList<Brick> bricks = new ArrayList<Brick>();
-    private int rotation = 0;
-    public RevLPiece (int sideLen) {
-        bricks.add(new Brick(sideLen, color(255,0,0), new PVector(1,0), this));
-        bricks.add(new Brick(sideLen, color(255,0,0), new PVector(1,1), this));
-        bricks.add(new Brick(sideLen, color(255,0,0), new PVector(1,2), this));
-        bricks.add(new Brick(sideLen, color(255,0,0), new PVector(0,2), this));
+    boolean upright = true;
+    public SPiece (int sideLen) {
+        bricks.add(new Brick(sideLen, color(0,255,0), new PVector(2,0), this));
+        bricks.add(new Brick(sideLen, color(0,255,0), new PVector(1,0), this));
+        bricks.add(new Brick(sideLen, color(0,255,0), new PVector(1,1), this));
+        bricks.add(new Brick(sideLen, color(0,255,0), new PVector(0,1), this));
     }
+
     void Rotate(int dir) {
         Brick pivot = bricks.get(1);
         for(int i = 0; i < bricks.size(); i++) {

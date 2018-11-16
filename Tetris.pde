@@ -1,6 +1,6 @@
 Board board;
 void setup() {
-    size(300, 640);
+    size(360, 840);
     background(0);
     int sideLen = 20;
     board = new Board(sideLen);

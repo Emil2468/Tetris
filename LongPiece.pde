@@ -3,36 +3,31 @@ public class LongPiece implements IPiece {
     private ArrayList<Brick> bricks = new ArrayList<Brick>();
     boolean upright = true;
     public LongPiece (int sideLen) {
-        bricks.add(new Brick(sideLen, color(255,255,0), new PVector(0,0)));
-        bricks.add(new Brick(sideLen, color(255,255,0), new PVector(0,1)));
-        bricks.add(new Brick(sideLen, color(255,255,0), new PVector(0,2)));
-        bricks.add(new Brick(sideLen, color(255,255,0), new PVector(0,3)));
+        bricks.add(new Brick(sideLen, color(255,255,0), new PVector(0,0), this));
+        bricks.add(new Brick(sideLen, color(255,255,0), new PVector(0,1), this));
+        bricks.add(new Brick(sideLen, color(255,255,0), new PVector(0,2), this));
+        bricks.add(new Brick(sideLen, color(255,255,0), new PVector(0,3), this));
     }
 
     void Rotate(int dir) {
-        if(upright) {
-            bricks.get(0).Move(1, 0);
-            bricks.get(1).Move(0, -1);
-            bricks.get(2).Move(-1, -2);
-            bricks.get(3).Move(-2, -3);
-            upright = false;
-        } else {
-            bricks.get(0).Move(-1, 0);
-            bricks.get(1).Move(0, 1);
-            bricks.get(2).Move(1, 2);
-            bricks.get(3).Move(2, 3);
-            upright = true;
+        Brick pivot = bricks.get(1);
+        for(int i = 0; i < bricks.size(); i++) {
+            //Compute difference from pivot to brick
+            float deltaX = bricks.get(i).pos.x - pivot.pos.x;
+            float deltaY = bricks.get(i).pos.y - pivot.pos.y; 
+            //Subtract and add deltas to rotate 90 degrees
+            bricks.get(i).Place(pivot.pos.x - deltaY * dir, pivot.pos.y + deltaX * dir);
         }
     }
 
     void Move(float deltaX, float deltaY) {
-        for(int i = 0; i < 4; i++) {
+        for(int i = 0; i < bricks.size(); i++) {
             bricks.get(i).Move(deltaX, deltaY);
         }
     }
 
     void Show() {
-        for(int i = 0; i < 4; i++) {
+        for(int i = 0; i < bricks.size(); i++) {
             bricks.get(i).Show();
         }
     }
@@ -41,4 +36,18 @@ public class LongPiece implements IPiece {
         return bricks;
     }
 
+
+    int RemoveBrick(Brick brick) {
+        bricks.remove(brick);
+        return bricks.size();
+    }
+
+    void MoveDownIfAbove(int clearedRow) {
+        for(int i = 0; i < bricks.size(); i++) {
+            //check if value is less than, since rownumber rise as we go down on the screen
+            if(bricks.get(i).pos.y <= clearedRow) {
+                bricks.get(i).Move(0, 1);
+            }
+        }
+    }
 }

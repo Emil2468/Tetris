@@ -3,29 +3,52 @@ public class LPiece implements IPiece {
     private ArrayList<Brick> bricks = new ArrayList<Brick>();
 
     public LPiece (int sideLen) {
-        bricks.add(new Brick(sideLen, color(255,0,255), new PVector(0,0)));
-        bricks.add(new Brick(sideLen, color(255,0,255), new PVector(0,1)));
-        bricks.add(new Brick(sideLen, color(255,0,255), new PVector(0,2)));
-        bricks.add(new Brick(sideLen, color(255,0,255), new PVector(1,2)));
+        bricks.add(new Brick(sideLen, color(255,0,255), new PVector(0,0), this));
+        bricks.add(new Brick(sideLen, color(255,0,255), new PVector(0,1), this));
+        bricks.add(new Brick(sideLen, color(255,0,255), new PVector(0,2), this));
+        bricks.add(new Brick(sideLen, color(255,0,255), new PVector(1,2), this));
     }
+
+    //Rotate by using brick[1] as pivot
     void Rotate(int dir) {
-        //Box is the same no matter rotation
+        Brick pivot = bricks.get(1);
+        for(int i = 0; i < bricks.size(); i++) {
+            //Compute difference from pivot to brick
+            float deltaX = bricks.get(i).pos.x - pivot.pos.x;
+            float deltaY = bricks.get(i).pos.y - pivot.pos.y; 
+            //Subtract and add deltas to rotate 90 degrees
+            bricks.get(i).Place(pivot.pos.x - deltaY * dir, pivot.pos.y + deltaX * dir);
+        }
     }
 
     void Move(float deltaX, float deltaY) {
-        for(int i = 0; i < 4; i++) {
+        for(int i = 0; i < bricks.size(); i++) {
             bricks.get(i).Move(deltaX, deltaY);
         }
     }
 
     void Show() {
-        for(int i = 0; i < 4; i++) {
+        for(int i = 0; i < bricks.size(); i++) {
             bricks.get(i).Show();
         }
     }
 
     ArrayList<Brick> GetBricks() {
         return bricks;
+    }
+
+    int RemoveBrick(Brick brick) {
+        bricks.remove(brick);
+        return bricks.size();
+    }
+
+    void MoveDownIfAbove(int clearedRow) {
+        for(int i = 0; i < bricks.size(); i++) {
+            //check if value is less than, since rownumber rise as we go down on the screen
+            if(bricks.get(i).pos.y <= clearedRow) {
+                bricks.get(i).Move(0, 1);
+            }
+        }
     }
 
 }
