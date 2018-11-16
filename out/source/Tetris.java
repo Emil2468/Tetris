@@ -18,7 +18,7 @@ Board board;
 public void setup() {
     
     background(0);
-    int sideLen = width/20;
+    int sideLen = 20;
     board = new Board(sideLen);
     println((int)0.001f);
     //frameRate(20);
@@ -45,6 +45,7 @@ public class Board {
     private int[] cols; //Contains the heigth of each collumn
     int maxY;
     IPiece activePiece;
+    private boolean[][] occupied;
     public Board (int sideLen) {
         this.sideLen = sideLen;
         maxY = height / sideLen;
@@ -52,6 +53,7 @@ public class Board {
         for(int i = 0; i < cols.length; i++) {
             cols[i] = maxY;
         }
+        occupied = new boolean[cols.length][maxY];
     }
 
     public void DrawGrid() {
@@ -72,24 +74,34 @@ public class Board {
             for(int i = 0; i < pieces.size(); i++) {
                 pieces.get(i).Show();
             }
-            for(int i = 0; i < 4; i++) {
-                int col = (int)activePiece.GetBricks()[i].pos.x;
-                if(activePiece.GetBricks()[i].pos.y + 1 >= cols[col]) { //Add one since coordinate is top of brick, but we want bottom
-                    for(int k = 0; k < 4; k++) {
-                        col = (int)activePiece.GetBricks()[k].pos.x;
-                        if(cols[col] > (int)activePiece.GetBricks()[k].pos.y) {
-                            cols[col] = (int)activePiece.GetBricks()[k].pos.y;
-                        }
-                    }
-                    newPiece();
-                    break;
-                }
+            if(collision()) {
+                updateCells();
+                newPiece();
             }
         } else {
             newPiece();
         }
     }
 
+    private boolean collision() {
+        for(int i = 0; i < activePiece.GetBricks().size(); i++) {
+            if(occupied[(int)activePiece.GetBricks().get(i).pos.x][(int)activePiece.GetBricks().get(i).pos.y]) {
+                return true;
+            }
+            if(activePiece.GetBricks().get(i).pos.y >= maxY - 1) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    private void updateCells() {
+        for(int k = 0; k < activePiece.GetBricks().size(); k++) {
+            occupied[(int)activePiece.GetBricks().get(k).pos.x][(int)activePiece.GetBricks().get(k).pos.y - 1] = true;
+        }
+    }
+    
     public void newPiece() {
         float rnd = random(1);
         if(rnd < 0.25f) {
@@ -106,19 +118,29 @@ public class Board {
 
     //Left = -1, right = 1
     public void MovePiece(int dir) {
-        //TODO: Check if piece can move
+        for(int i = 0; i < activePiece.GetBricks().size(); i++) {
+            if(activePiece.GetBricks().get(i).pos.x == 0 && dir == -1) {
+                return;
+            } 
+            if(activePiece.GetBricks().get(i).pos.x == cols.length - 1 && dir == 1) {
+                return;
+            }
+        }
         activePiece.Move(dir, 0);
+        if(collision()) {
+            activePiece.Move(-dir, 0); //Move back if it now collides
+        }
     }
 }
 public class BoxPiece implements IPiece {
 
-    public Brick[] Bricks = new Brick[4];
+    private ArrayList<Brick> bricks = new ArrayList<Brick>();
 
     public BoxPiece (int sideLen) {
-        Bricks[0] = new Brick(sideLen, color(0,0,255), new PVector(0,0));
-        Bricks[1] = new Brick(sideLen, color(0,0,255), new PVector(0,1));
-        Bricks[2] = new Brick(sideLen, color(0,0,255), new PVector(1,1));
-        Bricks[3] = new Brick(sideLen, color(0,0,255), new PVector(1,0));
+        bricks.add(new Brick(sideLen, color(0,0,255), new PVector(0,0)));
+        bricks.add(new Brick(sideLen, color(0,0,255), new PVector(0,1)));
+        bricks.add(new Brick(sideLen, color(0,0,255), new PVector(1,1)));
+        bricks.add(new Brick(sideLen, color(0,0,255), new PVector(1,0)));
     }
     public void Rotate(int dir) {
         //Box is the same no matter rotation
@@ -126,18 +148,18 @@ public class BoxPiece implements IPiece {
 
     public void Move(float deltaX, float deltaY) {
         for(int i = 0; i < 4; i++) {
-            Bricks[i].Move(deltaX, deltaY);
+            bricks.get(i).Move(deltaX, deltaY);
         }
     }
 
     public void Show() {
         for(int i = 0; i < 4; i++) {
-            Bricks[i].Show();
+            bricks.get(i).Show();
         }
     }
 
-    public Brick[] GetBricks() {
-        return Bricks;
+    public ArrayList<Brick> GetBricks() {
+        return bricks;
     }
 
 }
@@ -165,21 +187,20 @@ public class Brick {
 
 }
 interface IPiece {
-    Brick[] Bricks = new Brick[4];
     public void Show();
     public void Rotate(int dir);
     public void Move(float deltaX, float deltaY);
-    public Brick[] GetBricks();
+    public ArrayList<Brick> GetBricks();
 } 
 public class LPiece implements IPiece {
 
-    public Brick[] Bricks = new Brick[4];
+    private ArrayList<Brick> bricks = new ArrayList<Brick>();
 
     public LPiece (int sideLen) {
-        Bricks[0] = new Brick(sideLen, color(255,0,255), new PVector(0,0));
-        Bricks[1] = new Brick(sideLen, color(255,0,255), new PVector(0,1));
-        Bricks[2] = new Brick(sideLen, color(255,0,255), new PVector(0,2));
-        Bricks[3] = new Brick(sideLen, color(255,0,255), new PVector(1,2));
+        bricks.add(new Brick(sideLen, color(255,0,255), new PVector(0,0)));
+        bricks.add(new Brick(sideLen, color(255,0,255), new PVector(0,1)));
+        bricks.add(new Brick(sideLen, color(255,0,255), new PVector(0,2)));
+        bricks.add(new Brick(sideLen, color(255,0,255), new PVector(1,2)));
     }
     public void Rotate(int dir) {
         //Box is the same no matter rotation
@@ -187,30 +208,30 @@ public class LPiece implements IPiece {
 
     public void Move(float deltaX, float deltaY) {
         for(int i = 0; i < 4; i++) {
-            Bricks[i].Move(deltaX, deltaY);
+            bricks.get(i).Move(deltaX, deltaY);
         }
     }
 
     public void Show() {
         for(int i = 0; i < 4; i++) {
-            Bricks[i].Show();
+            bricks.get(i).Show();
         }
     }
 
-    public Brick[] GetBricks() {
-        return Bricks;
+    public ArrayList<Brick> GetBricks() {
+        return bricks;
     }
 
 }
 public class LongPiece implements IPiece {
 
-    public Brick[] Bricks = new Brick[4];
+    private ArrayList<Brick> bricks = new ArrayList<Brick>();
 
     public LongPiece (int sideLen) {
-        Bricks[0] = new Brick(sideLen, color(255,255,0), new PVector(0,0));
-        Bricks[1] = new Brick(sideLen, color(255,255,0), new PVector(0,1));
-        Bricks[2] = new Brick(sideLen, color(255,255,0), new PVector(0,2));
-        Bricks[3] = new Brick(sideLen, color(255,255,0), new PVector(0,3));
+        bricks.add(new Brick(sideLen, color(255,255,0), new PVector(0,0)));
+        bricks.add(new Brick(sideLen, color(255,255,0), new PVector(0,1)));
+        bricks.add(new Brick(sideLen, color(255,255,0), new PVector(0,2)));
+        bricks.add(new Brick(sideLen, color(255,255,0), new PVector(0,3)));
     }
     public void Rotate(int dir) {
         //Box is the same no matter rotation
@@ -218,30 +239,30 @@ public class LongPiece implements IPiece {
 
     public void Move(float deltaX, float deltaY) {
         for(int i = 0; i < 4; i++) {
-            Bricks[i].Move(deltaX, deltaY);
+            bricks.get(i).Move(deltaX, deltaY);
         }
     }
 
     public void Show() {
         for(int i = 0; i < 4; i++) {
-            Bricks[i].Show();
+            bricks.get(i).Show();
         }
     }
 
-    public Brick[] GetBricks() {
-        return Bricks;
+    public ArrayList<Brick> GetBricks() {
+        return bricks;
     }
 
 }
 public class RevLPiece implements IPiece {
 
-    public Brick[] Bricks = new Brick[4];
+    private ArrayList<Brick> bricks = new ArrayList<Brick>();
 
     public RevLPiece (int sideLen) {
-        Bricks[0] = new Brick(sideLen, color(255,0,0), new PVector(1,0));
-        Bricks[1] = new Brick(sideLen, color(255,0,0), new PVector(1,1));
-        Bricks[2] = new Brick(sideLen, color(255,0,0), new PVector(1,2));
-        Bricks[3] = new Brick(sideLen, color(255,0,0), new PVector(0,2));
+        bricks.add(new Brick(sideLen, color(255,0,0), new PVector(1,0)));
+        bricks.add(new Brick(sideLen, color(255,0,0), new PVector(1,1)));
+        bricks.add(new Brick(sideLen, color(255,0,0), new PVector(1,2)));
+        bricks.add(new Brick(sideLen, color(255,0,0), new PVector(0,2)));
     }
     public void Rotate(int dir) {
         //Box is the same no matter rotation
@@ -249,22 +270,22 @@ public class RevLPiece implements IPiece {
 
     public void Move(float deltaX, float deltaY) {
         for(int i = 0; i < 4; i++) {
-            Bricks[i].Move(deltaX, deltaY);
+            bricks.get(i).Move(deltaX, deltaY);
         }
     }
 
     public void Show() {
         for(int i = 0; i < 4; i++) {
-            Bricks[i].Show();
+            bricks.get(i).Show();
         }
     }
 
-    public Brick[] GetBricks() {
-        return Bricks;
+    public ArrayList<Brick> GetBricks() {
+        return bricks;
     }
 
 }
-  public void settings() {  size(360, 720); }
+  public void settings() {  size(300, 640); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "Tetris" };
     if (passedArgs != null) {

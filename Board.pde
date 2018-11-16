@@ -4,6 +4,7 @@ public class Board {
     private int[] cols; //Contains the heigth of each collumn
     int maxY;
     IPiece activePiece;
+    private boolean[][] occupied;
     public Board (int sideLen) {
         this.sideLen = sideLen;
         maxY = height / sideLen;
@@ -11,6 +12,7 @@ public class Board {
         for(int i = 0; i < cols.length; i++) {
             cols[i] = maxY;
         }
+        occupied = new boolean[cols.length][maxY];
     }
 
     public void DrawGrid() {
@@ -31,24 +33,34 @@ public class Board {
             for(int i = 0; i < pieces.size(); i++) {
                 pieces.get(i).Show();
             }
-            for(int i = 0; i < 4; i++) {
-                int col = (int)activePiece.GetBricks()[i].pos.x;
-                if(activePiece.GetBricks()[i].pos.y + 1 >= cols[col]) { //Add one since coordinate is top of brick, but we want bottom
-                    for(int k = 0; k < 4; k++) {
-                        col = (int)activePiece.GetBricks()[k].pos.x;
-                        if(cols[col] > (int)activePiece.GetBricks()[k].pos.y) {
-                            cols[col] = (int)activePiece.GetBricks()[k].pos.y;
-                        }
-                    }
-                    newPiece();
-                    break;
-                }
+            if(collision()) {
+                updateCells();
+                newPiece();
             }
         } else {
             newPiece();
         }
     }
 
+    private boolean collision() {
+        for(int i = 0; i < activePiece.GetBricks().size(); i++) {
+            if(occupied[(int)activePiece.GetBricks().get(i).pos.x][(int)activePiece.GetBricks().get(i).pos.y]) {
+                return true;
+            }
+            if(activePiece.GetBricks().get(i).pos.y >= maxY - 1) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    private void updateCells() {
+        for(int k = 0; k < activePiece.GetBricks().size(); k++) {
+            occupied[(int)activePiece.GetBricks().get(k).pos.x][(int)activePiece.GetBricks().get(k).pos.y - 1] = true;
+        }
+    }
+    
     public void newPiece() {
         float rnd = random(1);
         if(rnd < 0.25) {
@@ -65,7 +77,17 @@ public class Board {
 
     //Left = -1, right = 1
     public void MovePiece(int dir) {
-        //TODO: Check if piece can move
+        for(int i = 0; i < activePiece.GetBricks().size(); i++) {
+            if(activePiece.GetBricks().get(i).pos.x == 0 && dir == -1) {
+                return;
+            } 
+            if(activePiece.GetBricks().get(i).pos.x == cols.length - 1 && dir == 1) {
+                return;
+            }
+        }
         activePiece.Move(dir, 0);
+        if(collision()) {
+            activePiece.Move(-dir, 0); //Move back if it now collides
+        }
     }
 }
